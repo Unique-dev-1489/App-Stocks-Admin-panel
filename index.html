@@ -1,301 +1,461 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Stocks  - Admin Panel</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-    
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
-    <style>
-        :root {
-            --dark-bg: #0e0e0e;
-            --glass-bg: rgba(20, 20, 30, 0.5);
-            --border-color: rgba(255, 255, 255, 0.2);
-            --text-color: #f0f0f0;
-            --glow-cyan: #00ffff;
-            --glow-pink: #ff00ff;
-            --glow-purple: #9f00ff;
-            --gold: #FFD700;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--dark-bg);
-            color: var(--text-color);
-            background-image: radial-gradient(circle at top left, rgba(159, 0, 255, 0.2), transparent 30%), radial-gradient(circle at bottom right, rgba(0, 255, 255, 0.2), transparent 30%);
-            background-attachment: fixed;
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-        .glass-box {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 25px;
-            border: 1px solid var(--border-color);
-            padding: 2rem;
-        }
-        .gradient-text {
-            background: linear-gradient(90deg, var(--glow-pink), var(--glow-purple), var(--glow-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 700;
-        }
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border: none;
-        }
-        .btn:hover { transform: scale(1.05); }
-        .btn-solid {
-            background: linear-gradient(90deg, var(--glow-purple), var(--glow-pink));
-            color: white;
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
-        }
-        .btn-solid:hover { box-shadow: 0 0 25px rgba(255, 0, 255, 0.6); }
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--glow-cyan);
-            color: var(--glow-cyan);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-        }
-        .btn-outline:hover { box-shadow: 0 0 20px rgba(0, 255, 255, 0.6); }
-        input, textarea, select {
-            width: 100%;
-            padding: 1rem;
-            background: rgba(0,0,0,0.4);
-            border-radius: 15px;
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            font-family: 'Poppins', sans-serif;
-            font-size: 1rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            margin-bottom: 1rem;
-        }
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--glow-cyan);
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-        }
-        .auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; }
-        .auth-box { width: 100%; max-width: 450px; text-align: center; }
-        .auth-box h1 { margin-bottom: 2rem; font-size: 2.5rem; }
-        .auth-box form { display: flex; flex-direction: column; gap: 1rem; }
-        #admin-dashboard { display: none; padding: 2rem; max-width: 1400px; margin: 0 auto; }
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; }
-        .dashboard-section h2 { margin-bottom: 1.5rem; font-size: 2rem; }
-        .list-item { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 15px; margin-bottom: 1rem; border-left: 4px solid var(--glow-purple); }
-        .list-item-content { flex-grow: 1; }
-        .list-item h3 { font-size: 1.2rem; }
-        .list-item p { opacity: 0.8; font-size: 0.9rem; }
-        .list-item-controls { display: flex; gap: 0.5rem; flex-wrap: nowrap; align-items: center; }
-        .list-item-controls .btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
-        .btn-feature { font-size: 1.5rem; padding: 0.5rem; background: transparent; color: rgba(255, 255, 255, 0.4); border: none; cursor: pointer; }
-        .btn-feature.featured { color: var(--gold); }
-        .btn-approve, .btn-edit { border-color: var(--glow-cyan); color: var(--glow-cyan); }
-        .btn-reject, .btn-delete { border-color: var(--glow-pink); color: var(--glow-pink); }
-        #add-edit-form-container { grid-column: 1 / -1; }
-        #add-edit-form { display: flex; flex-direction: column; gap: 0.5rem; }
-        .form-row { display: flex; gap: 1rem; }
-        .form-row > * { flex: 1; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>App Store - Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary-bg: #121212;
+      --secondary-bg: #1E1E1E;
+      --card-bg: #2A2A2A;
+      --primary-text: #E0E0E0;
+      --secondary-text: #B3B3B3;
+      --accent-color: #007BFF;
+      --success-color: #28a745;
+      --error-color: #dc3545;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--primary-bg);
+      color: var(--primary-text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+
+    .admin-section {
+      background-color: var(--secondary-bg);
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      font-weight: 400;
+      border-bottom: 1px solid #444;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--secondary-text);
+      font-size: 0.9em;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background-color: var(--card-bg);
+      color: var(--primary-text);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent-color);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      background-color: var(--accent-color);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #status-message {
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-weight: 600;
+      display: none;
+    }
+    .status-success { background-color: var(--success-color); color: white; }
+    .status-error { background-color: var(--error-color); color: white; }
+
+    #category-list, #app-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    #category-list li, #app-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--card-bg);
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: var(--error-color);
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 5px;
+    }
+
+    .delete-app-btn {
+      font-size: 0.9rem;
+      color: #fff;
+      background-color: var(--error-color);
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <div id="auth-container" class="auth-container">
-        <div class="auth-box glass-box">
-            <h1 class="gradient-text">Admin Login</h1>
-            <form id="login-form">
-                <input type="email" id="login-email" placeholder="Email Address" required>
-                <input type="password" id="login-password" placeholder="Password" required>
-                <button type="submit" class="btn btn-solid">Login</button>
-                <p id="login-error" style="color: var(--glow-pink)"></p>
-            </form>
-        </div>
+
+<div class="container">
+  <h1>App Store Admin Panel</h1>
+
+  <!-- Section: Add App -->
+  <section class="admin-section">
+    <h2>Add New App</h2>
+    <form id="add-app-form">
+      <div class="form-group">
+        <label for="appName">App Name</label>
+        <input type="text" id="appName" required>
+      </div>
+      <div class="form-group">
+        <label for="appLogo">App Logo URL</label>
+        <input type="url" id="appLogo" required>
+      </div>
+      <div class="form-group">
+        <label for="appVersion">App Version</label>
+        <input type="text" id="appVersion" required>
+      </div>
+      <div class="form-group">
+        <label for="appLink">App Download Link</label>
+        <input type="url" id="appLink" required>
+      </div>
+      <div class="form-group">
+        <label for="appCategory">App Category</label>
+        <select id="appCategory" required>
+          <option value="" disabled selected>Loading categories...</option>
+        </select>
+      </div>
+      <button type="submit">Publish App</button>
+      <p id="app-status-message"></p>
+    </form>
+  </section>
+
+  <!-- Section: Manage Categories -->
+  <section class="admin-section">
+    <h2>Manage Categories</h2>
+    <form id="add-category-form">
+      <div class="form-group">
+        <label for="newCategoryName">New Category Name</label>
+        <input type="text" id="newCategoryName" required>
+      </div>
+      <button type="submit">Add Category</button>
+    </form>
+
+    <h3 style="margin-top: 30px; margin-bottom: 15px; font-weight: 400;">Existing Categories</h3>
+    <ul id="category-list"><li>Loading...</li></ul>
+    <p id="category-status-message"></p>
+  </section>
+
+  <!-- Section: Manage Apps -->
+  <section class="admin-section">
+    <h2>Manage Apps</h2>
+    <div class="form-group">
+      <label for="searchApp">Search App</label>
+      <input type="text" id="searchApp" placeholder="Type app name to search...">
     </div>
+    <ul id="app-list"><li>Loading apps...</li></ul>
+    <p id="app-delete-status-message"></p>
+  </section>
+</div>
 
-    <div id="admin-dashboard">
-        <header class="dashboard-header">
-            <h1 class="gradient-text" style="font-size: 3rem;">Admin Dashboard</h1>
-            <button id="logout-btn" class="btn btn-outline">Logout</button>
-        </header>
-        
-        <div class="dashboard-grid">
-            <section id="add-edit-form-container" class="glass-box">
-                <h2 id="form-title" class="gradient-text">Add New Item</h2>
-                <form id="add-edit-form">
-                    <input type="hidden" id="item-id"><input type="hidden" id="pending-id"><input type="hidden" id="submitter-email"><input type="hidden" id="update-of-id">
-                    <input type="text" id="item-title" placeholder="Title" required>
-                    <textarea id="item-description" rows="3" placeholder="Description" required></textarea>
-                    <div class="form-row"><input type="url" id="item-logo" placeholder="Logo Image URL" required><input type="text" id="publisher-name" placeholder="Publisher Name" required></div>
-                    <div class="form-row"><select id="item-type" required><option value="">-- Type --</option><option value="Game">Game</option><option value="App">App</option></select><select id="submission-type" required><option value="">-- Submission Type --</option><option value="html">HTML Embed</option><option value="link">Download Link</option></select></div>
-                    <textarea id="item-html" rows="6" placeholder="HTML / Embed Code (if applicable)"></textarea>
-                    <input type="url" id="item-download-link" placeholder="Download Link (if applicable)">
-                    <textarea id="item-screenshots" rows="2" placeholder="Comma-separated screenshot URLs (optional)"></textarea>
-                    <button type="submit" id="form-submit-btn" class="btn btn-solid">Publish Item</button>
-                    <button type="button" id="cancel-edit-btn" class="btn btn-outline" style="display: none; margin-top: 1rem;">Cancel</button>
-                    <p id="form-message"></p>
-                </form>
-            </section>
-            
-            <section id="pending-submissions" class="dashboard-section glass-box">
-                <h2 class="gradient-text">Pending Submissions</h2>
-                <div id="pending-list"></div>
-            </section>
-            
-            <section id="published-items" class="dashboard-section glass-box">
-                <h2 class="gradient-text">Published Items</h2>
-                <div id="published-list"></div>
-            </section>
-        </div>
-    </div>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const firebaseConfig = {
-  apiKey: "AIzaSyDGqBvjShfx9zPAvpEJdoqD-0AiIdaepRo",
-  authDomain: "an-app-store-8de57.firebaseapp.com",
-  databaseURL: "https://an-app-store-8de57-default-rtdb.firebaseio.com",
-  projectId: "an-app-store-8de57",
-  storageBucket: "an-app-store-8de57.firebasestorage.app",
-  messagingSenderId: "4623788585",
-  appId: "1:4623788585:web:b98791a1d17b6ae84e4a38"
-};    // --- END OF FIREBASE CONFIGURATION ---
+<script>
+  const firebaseConfig = {
+  apiKey: "AIzaSyAah7oXpp4gnz50iZjRbzsqtzB9k9QYyl0",
+  authDomain: "app-stocks-40a78.firebaseapp.com",
+  databaseURL: "https://app-stocks-40a78-default-rtdb.firebaseio.com",
+  projectId: "app-stocks-40a78",
+  storageBucket: "app-stocks-40a78.firebasestorage.app",
+  messagingSenderId: "1023873572145",
+  appId: "1:1023873572145:web:991f8a52d3243991cba410"
+};
 
-        const adminApp = firebase.initializeApp(firebaseConfig, 'adminApp');
-        const auth = adminApp.auth();
-        const db = adminApp.database();
-        const serverTimestamp = firebase.database.ServerValue.TIMESTAMP;
-        
-        const authContainer = document.getElementById('auth-container'), adminDashboard = document.getElementById('admin-dashboard'), addEditForm = document.getElementById('add-edit-form'), formMessage = document.getElementById('form-message'), pendingList = document.getElementById('pending-list'), publishedList = document.getElementById('published-list');
-        const pendingIdField = document.getElementById('pending-id'), submitterEmailField = document.getElementById('submitter-email'), updateOfIdField = document.getElementById('update-of-id'), itemIdField = document.getElementById('item-id');
-        
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                authContainer.style.display = 'none';
-                adminDashboard.style.display = 'block';
-                loadPendingSubmissions();
-                loadPublishedItems();
-            } else {
-                authContainer.style.display = 'flex';
-                adminDashboard.style.display = 'none';
-            }
-        });
-        document.getElementById('login-form').addEventListener('submit', e => { e.preventDefault(); auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-password').value).catch(error => document.getElementById('login-error').textContent = error.message); });
-        document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-        function loadPendingSubmissions() {
-            db.ref('pendingSubmissions').on('value', snapshot => {
-                pendingList.innerHTML = !snapshot.exists() ? '<p>No pending submissions.</p>' : '';
-                if(snapshot.exists()) snapshot.forEach(child => {
-                    const id = child.key, data = child.val();
-                    const itemEl = document.createElement('div');
-                    itemEl.className = 'list-item';
-                    const updateText = data.updateOf ? ' (Update Request)' : '';
-                    itemEl.innerHTML = `<div class="list-item-content"><h3>${data.title}${updateText}</h3><p>By: ${data.publisherName} (${data.submitterEmail})</p></div><div class="list-item-controls"><button class="btn btn-outline btn-approve" onclick="window.approveSubmission('${id}')">Approve</button><button class="btn btn-outline btn-reject" onclick="window.rejectSubmission('${id}')">Reject</button></div>`;
-                    pendingList.appendChild(itemEl);
-                });
-            });
-        }
+  const addAppForm = document.getElementById('add-app-form');
+  const addCategoryForm = document.getElementById('add-category-form');
+  const appCategorySelect = document.getElementById('appCategory');
+  const categoryList = document.getElementById('category-list');
+  const appList = document.getElementById('app-list');
+  const appStatusMessage = document.getElementById('app-status-message');
+  const categoryStatusMessage = document.getElementById('category-status-message');
+  const appDeleteStatusMessage = document.getElementById('app-delete-status-message');
+  const searchInput = document.getElementById('searchApp');
 
-        function loadPublishedItems() {
-            db.ref('items').on('value', snapshot => {
-                publishedList.innerHTML = !snapshot.exists() ? '<p>No published items.</p>' : '';
-                if(snapshot.exists()) snapshot.forEach(child => {
-                    const id = child.key, data = child.val();
-                    const itemEl = document.createElement('div');
-                    itemEl.className = 'list-item';
-                    itemEl.style.borderLeftColor = 'var(--glow-cyan)';
-                    const featuredClass = data.isFeatured ? 'featured' : '';
-                    itemEl.innerHTML = `<div class="list-item-content"><h3>${data.title}</h3><p>By: ${data.publisherName}</p></div><div class="list-item-controls"><button title="Toggle Featured" class="btn-feature ${featuredClass}" onclick="window.toggleFeatured('${id}',${!!data.isFeatured})">⭐</button><button class="btn btn-outline btn-edit" onclick="window.editPublishedItem('${id}')">Edit</button><button class="btn btn-outline btn-delete" onclick="window.deletePublishedItem('${id}')">Delete</button></div>`;
-                    publishedList.appendChild(itemEl);
-                });
-            });
-        }
-        
-        window.approveSubmission = id => {
-            db.ref(`pendingSubmissions/${id}`).once('value', snapshot => {
-                const data = snapshot.val(); if (!data) return;
-                resetForm();
-                document.getElementById('form-title').textContent = 'Approve & Publish';
-                pendingIdField.value = id;
-                submitterEmailField.value = data.submitterEmail;
-                updateOfIdField.value = data.updateOf || '';
-                document.getElementById('item-title').value = data.title; document.getElementById('item-description').value = data.description || ''; document.getElementById('item-logo').value = data.logoUrl; document.getElementById('publisher-name').value = data.publisherName; document.getElementById('item-type').value = data.type; document.getElementById('submission-type').value = data.submissionType; document.getElementById('item-html').value = data.htmlCode || ''; document.getElementById('item-download-link').value = data.downloadLink || ''; document.getElementById('item-screenshots').value = (data.screenshots || []).join(', ');
-                document.getElementById('add-edit-form-container').scrollIntoView();
-            });
-        };
-        window.rejectSubmission = id => { if(confirm('Reject this submission?')) db.ref(`pendingSubmissions/${id}`).remove().then(() => showMessage('Submission rejected.', false)).catch(e => showMessage(e.message, true)); };
-        
-        window.editPublishedItem = id => {
-            db.ref(`items/${id}`).once('value', snapshot => {
-                const data = snapshot.val(); if (!data) return;
-                resetForm();
-                document.getElementById('form-title').textContent = 'Edit Published Item'; document.getElementById('form-submit-btn').textContent = 'Update Item'; document.getElementById('cancel-edit-btn').style.display = 'block';
-                itemIdField.value = id;
-                document.getElementById('item-title').value = data.title; document.getElementById('item-description').value = data.description || ''; document.getElementById('item-logo').value = data.logoUrl; document.getElementById('publisher-name').value = data.publisherName; document.getElementById('item-type').value = data.type; document.getElementById('submission-type').value = data.submissionType; document.getElementById('item-html').value = data.htmlCode || ''; document.getElementById('item-download-link').value = data.downloadLink || ''; document.getElementById('item-screenshots').value = (data.screenshots || []).join(', ');
-                document.getElementById('add-edit-form-container').scrollIntoView();
-            });
-        };
-        
-        window.deletePublishedItem = id => { if(confirm('DELETE this published item forever?')) db.ref(`items/${id}`).remove().then(() => showMessage('Item deleted.', false)).catch(e => showMessage(e.message, true)); };
-        window.toggleFeatured = (id, currentStatus) => { db.ref(`items/${id}/isFeatured`).set(!currentStatus); };
+  const showStatus = (element, message, isSuccess) => {
+    element.textContent = message;
+    element.className = isSuccess ? 'status-success' : 'status-error';
+    element.style.display = 'block';
+    setTimeout(() => {
+      element.style.display = 'none';
+    }, 3000);
+  };
 
-        addEditForm.addEventListener('submit', e => {
-            e.preventDefault();
-            const screenshots = document.getElementById('item-screenshots').value.split(',').map(s => s.trim()).filter(s => s);
-            const itemData = { title: document.getElementById('item-title').value, description: document.getElementById('item-description').value, logoUrl: document.getElementById('item-logo').value, publisherName: document.getElementById('publisher-name').value, type: document.getElementById('item-type').value, submissionType: document.getElementById('submission-type').value, htmlCode: document.getElementById('item-html').value, downloadLink: document.getElementById('item-download-link').value, screenshots: screenshots };
-            const existingItemId = itemIdField.value, updateOfId = updateOfIdField.value;
-            
-            if (existingItemId) {
-                itemData.updatedAt = serverTimestamp;
-                db.ref(`items/${existingItemId}`).update(itemData).then(() => {
-                    showMessage('Item updated successfully!', false);
-                    resetForm();
-                }).catch(error => showMessage(`Error: ${error.message}`, true));
-            } else {
-                const pendingId = pendingIdField.value;
-                itemData.publisherEmail = submitterEmailField.value; // Carry over the email
-                
-                let dbOperation, successMessage;
-                if (updateOfId) {
-                    itemData.updatedAt = serverTimestamp;
-                    dbOperation = db.ref(`items/${updateOfId}`).update(itemData);
-                    successMessage = `Update for "${itemData.title}" has been approved!`;
-                } else {
-                    itemData.publishedAt = serverTimestamp; itemData.isFeatured = false; itemData.avgRating = 0; itemData.totalRatings = 0; itemData.sumOfRatings = 0;
-                    dbOperation = db.ref('items').push(itemData);
-                    successMessage = `Submission "${itemData.title}" has been published!`;
-                }
+  // Fetch Categories
+  db.collection('categories').orderBy('name').onSnapshot(snapshot => {
+    appCategorySelect.innerHTML = '<option value="" disabled selected>Select a category</option>';
+    categoryList.innerHTML = '';
 
-                dbOperation.then(() => {
-                    db.ref(`pendingSubmissions/${pendingId}`).remove();
-                    const sanitizedEmail = itemData.publisherEmail.replace(/[.#$\[\]]/g, "_");
-                    db.ref(`notifications/${sanitizedEmail}`).push({ title: itemData.title, status: 'approved', message: successMessage, seen: false, timestamp: serverTimestamp });
-                    showMessage('Submission approved and published!', false);
-                    resetForm();
-                }).catch(error => showMessage(`Error: ${error.message}`, true));
-            }
-        });
+    if (snapshot.empty) {
+      categoryList.innerHTML = '<li>No categories found. Add one above!</li>';
+    }
 
-        const resetForm = () => { addEditForm.reset(); document.getElementById('form-title').textContent = 'Add New Item'; document.getElementById('form-submit-btn').textContent = 'Publish Item'; document.getElementById('cancel-edit-btn').style.display = 'none'; itemIdField.value = ''; pendingIdField.value = ''; submitterEmailField.value = ''; updateOfIdField.value = ''; };
-        document.getElementById('cancel-edit-btn').addEventListener('click', resetForm);
-        const showMessage = (msg, isError) => { formMessage.textContent = msg; formMessage.style.color = isError ? 'var(--glow-pink)' : 'var(--glow-cyan)'; setTimeout(() => formMessage.textContent = '', 5000); };
+    snapshot.forEach(doc => {
+      const category = doc.data();
+      const categoryId = doc.id;
+
+      const option = document.createElement('option');
+      option.value = category.name;
+      option.textContent = category.name;
+      appCategorySelect.appendChild(option);
+
+      const li = document.createElement('li');
+      li.textContent = category.name;
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = '✖';
+      deleteButton.className = 'delete-btn';
+      deleteButton.dataset.id = categoryId;
+
+      li.appendChild(deleteButton);
+      categoryList.appendChild(li);
     });
-    </script>
+  });
+
+  // Add Category
+  addCategoryForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newCategoryName = document.getElementById('newCategoryName').value.trim();
+    if (newCategoryName) {
+      db.collection('categories').add({ name: newCategoryName })
+        .then(() => {
+          showStatus(categoryStatusMessage, 'Category added successfully!', true);
+          addCategoryForm.reset();
+        })
+        .catch(error => {
+          showStatus(categoryStatusMessage, `Error: ${error.message}`, false);
+        });
+    }
+  });
+
+  // Delete Category
+  categoryList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('delete-btn')) {
+      const categoryId = e.target.dataset.id;
+      if (confirm('Are you sure you want to delete this category?')) {
+        db.collection('categories').doc(categoryId).delete()
+          .then(() => {
+            showStatus(categoryStatusMessage, 'Category deleted!', true);
+          })
+          .catch(error => {
+            showStatus(categoryStatusMessage, `Error: ${error.message}`, false);
+          });
+      }
+    }
+  });
+
+  // Add App
+  addAppForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const newApp = {
+      name: document.getElementById('appName').value,
+      logoUrl: document.getElementById('appLogo').value,
+      version: document.getElementById('appVersion').value,
+      downloadLink: document.getElementById('appLink').value,
+      category: document.getElementById('appCategory').value,
+    };
+
+    db.collection('apps').add(newApp)
+      .then(() => {
+        showStatus(appStatusMessage, 'App published successfully!', true);
+        addAppForm.reset();
+        appCategorySelect.selectedIndex = 0;
+      })
+      .catch(error => {
+        showStatus(appStatusMessage, `Error: ${error.message}`, false);
+      });
+  });
+
+  // Manage and Search Apps
+  let allApps = [];
+
+  db.collection('apps').orderBy('name').onSnapshot(snapshot => {
+    allApps = [];
+    if (snapshot.empty) {
+      appList.innerHTML = '<li>No apps found.</li>';
+      return;
+    }
+
+    snapshot.forEach(doc => {
+      const app = doc.data();
+      app.id = doc.id;
+      allApps.push(app);
+    });
+
+    renderApps(allApps);
+  });
+
+  function renderApps(apps) {
+    appList.innerHTML = '';
+    if (apps.length === 0) {
+      appList.innerHTML = '<li>No apps matched your search.</li>';
+      return;
+    }
+
+    apps.forEach(app => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <div>
+          <strong>${app.name}</strong><br>
+          <small style="color: var(--secondary-text);">${app.category} - v${app.version}</small>
+        </div>
+      `;
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.className = 'delete-app-btn';
+      deleteButton.addEventListener('click', () => {
+        if (confirm(`Delete app "${app.name}"?`)) {
+          db.collection('apps').doc(app.id).delete()
+            .then(() => showStatus(appDeleteStatusMessage, 'App deleted successfully!', true))
+            .catch(err => showStatus(appDeleteStatusMessage, `Error: ${err.message}`, false));
+        }
+      });
+
+      li.appendChild(deleteButton);
+      appList.appendChild(li);
+    });
+  }
+
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase();
+    const filteredApps = allApps.filter(app => app.name.toLowerCase().includes(query));
+    renderApps(filteredApps);
+  });
+
+function renderApps(apps) {
+  appList.innerHTML = '';
+  if (apps.length === 0) {
+    appList.innerHTML = '<li>No apps matched your search.</li>';
+    return;
+  }
+
+  apps.forEach(app => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <div>
+        <strong>${app.name}</strong><br>
+        <small style="color: var(--secondary-text);">${app.category} - v${app.version}</small>
+      </div>
+    `;
+
+    // Edit Button
+    const editButton = document.createElement('button');
+    editButton.textContent = 'Edit';
+    editButton.className = 'delete-app-btn';
+    editButton.style.backgroundColor = '#ffc107'; // yellow style for edit
+    editButton.style.marginRight = '8px';
+
+    editButton.addEventListener('click', () => {
+      // Show a prompt-based edit form (simple version)
+      const newName = prompt("Edit App Name:", app.name);
+      const newLogo = prompt("Edit App Logo URL:", app.logoUrl);
+      const newVersion = prompt("Edit App Version:", app.version);
+      const newLink = prompt("Edit App Download Link:", app.downloadLink);
+      const newCategory = prompt("Edit App Category:", app.category);
+
+      if (newName && newLogo && newVersion && newLink && newCategory) {
+        db.collection('apps').doc(app.id).update({
+          name: newName,
+          logoUrl: newLogo,
+          version: newVersion,
+          downloadLink: newLink,
+          category: newCategory
+        })
+        .then(() => {
+          showStatus(appDeleteStatusMessage, 'App updated successfully!', true);
+        })
+        .catch(err => {
+          showStatus(appDeleteStatusMessage, `Error: ${err.message}`, false);
+        });
+      }
+    });
+
+    // Delete Button
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.className = 'delete-app-btn';
+    deleteButton.addEventListener('click', () => {
+      if (confirm(`Delete app "${app.name}"?`)) {
+        db.collection('apps').doc(app.id).delete()
+          .then(() => showStatus(appDeleteStatusMessage, 'App deleted successfully!', true))
+          .catch(err => showStatus(appDeleteStatusMessage, `Error: ${err.message}`, false));
+      }
+    });
+
+    li.appendChild(editButton);
+    li.appendChild(deleteButton);
+    appList.appendChild(li);
+  });
+}
+</script>
 </body>
-    </html>
+</html>
