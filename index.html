@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Panel</title>
+  <title>App Store - Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
   <style>
     :root {
       --primary-bg: #121212;
@@ -16,68 +17,58 @@
       --accent-color: #007BFF;
       --success-color: #28a745;
       --error-color: #dc3545;
-      --white: #fff;
     }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
       font-family: 'Poppins', sans-serif;
       background-color: var(--primary-bg);
       color: var(--primary-text);
       display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
     }
-    .sidebar {
-      width: 230px;
-      background-color: var(--secondary-bg);
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: -230px;
-      transition: left 0.3s ease;
-      padding-top: 60px;
-      z-index: 999;
-    }
-    .sidebar.open { left: 0; }
-    .sidebar ul { list-style: none; padding: 0 20px; }
-    .sidebar ul li {
-      padding: 15px 10px;
-      cursor: pointer;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      background-color: var(--card-bg);
-      text-align: center;
-      transition: background 0.3s ease;
-    }
-    .sidebar ul li:hover { background-color: var(--accent-color); }
-    .menu-toggle {
-      position: fixed;
-      top: 0;
-      left: 0;
-      background: var(--card-bg);
-      border: none;
-      color: white;
-      font-size: 24px;
-      cursor: pointer;
-      z-index: 1000;
-      padding: 7px 12px;
-      border-radius: 0 6px 6px 0;
-    }
-    .main { margin-left: 0; padding: 60px 20px 20px 20px; width: 100%; transition: margin-left 0.3s ease; }
-    .main.shifted { margin-left: 230px; }
-    .section {
-      display: none;
+
+    .container {
+      width: 100%;
       max-width: 800px;
-      margin: auto;
-      background: var(--secondary-bg);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+
+    .admin-section {
+      background-color: var(--secondary-bg);
       padding: 25px;
       border-radius: 12px;
       margin-bottom: 30px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
-    .section.active { display: block; }
-    h1, h2, h3 { text-align: center; margin-bottom: 20px; font-weight: 600; }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; color: var(--secondary-text); font-size: 0.9em; }
-    input, textarea, select {
+
+    h2 {
+      font-weight: 400;
+      border-bottom: 1px solid #444;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--secondary-text);
+      font-size: 0.9em;
+    }
+
+    input, select {
       width: 100%;
       padding: 12px 15px;
       border-radius: 8px;
@@ -86,411 +77,384 @@
       color: var(--primary-text);
       font-size: 1rem;
       outline: none;
+      transition: border-color 0.3s ease;
     }
+
+    input:focus, select:focus {
+      border-color: var(--accent-color);
+    }
+
     button {
-      padding: 8px 16px;
+      width: 100%;
+      padding: 12px 20px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       color: #fff;
-      font-size: 0.9rem;
+      background-color: var(--accent-color);
+      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      margin-left: 5px;
+      transition: background-color 0.3s ease;
     }
-    button:hover { opacity: 0.9; }
-    .status-success { color: var(--success-color); margin-top: 10px; text-align:center; }
-    .status-error { color: var(--error-color); margin-top: 10px; text-align:center; }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 20px;
+
+    button:hover {
+      background-color: #0056b3;
     }
-    .stat-card {
-      background-color: var(--card-bg);
-      padding: 20px;
-      border-radius: 10px;
+
+    #status-message {
       text-align: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-weight: 600;
+      display: none;
     }
-    .delete-app-btn { background: var(--error-color); }
-    .edit-app-btn { background: var(--accent-color); }
-    .delete-btn { background: var(--error-color); }
-    .form-check { display: flex; align-items: center; gap: 10px; }
-    .form-check-input {
-      appearance: none;
-      width: 40px;
-      height: 20px;
-      background-color: #444;
-      border-radius: 20px;
-      position: relative;
+    .status-success { background-color: var(--success-color); color: white; }
+    .status-error { background-color: var(--error-color); color: white; }
+
+    #category-list, #app-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    #category-list li, #app-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--card-bg);
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: var(--error-color);
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 5px;
+    }
+
+    .delete-app-btn {
+      font-size: 0.9rem;
+      color: #fff;
+      background-color: var(--error-color);
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
       cursor: pointer;
     }
-    .form-check-input::before {
-      content: '';
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--white);
-      top: 2px;
-      left: 2px;
-      transition: transform 0.3s;
-    }
-    .form-check-input:checked { background-color: var(--accent-color); }
-    .form-check-input:checked::before { transform: translateX(20px); }
-    .form-result { margin-top: 10px; text-align: center; }
-    .form-result.success { color: var(--success-color); }
-    .form-result.error { color: var(--error-color); }
   </style>
 </head>
 <body>
-<!-- SIDEBAR -->
-<button class="menu-toggle">☰</button>
-<div class="sidebar">
-  <ul>
-    <li onclick="showSection('dashboard')">Dashboard</li>
-    <li onclick="showSection('addApp')">Add App</li>
-    <li onclick="showSection('categories')">Manage Categories</li>
-    <li onclick="showSection('apps')">Manage Apps</li>
-    <li onclick="showSection('notification')">Send Notification</li>
-    <li onclick="showSection('settings')">Settings</li>
-  </ul>
-</div>
 
-<div class="main" id="mainContent">
-  <!-- Dashboard -->
-  <div class="section active" id="dashboard">
-    <h2>Dashboard</h2>
-    <div class="stats-grid">
-      <div class="stat-card"><h3 id="totalApps">0</h3><p>Total Apps</p></div>
-      <div class="stat-card"><h3 id="totalCategories">0</h3><p>Total Categories</p></div>
-      <div class="stat-card"><h3 id="totalNotifications">0</h3><p>Notifications Sent</p></div>
-      <div class="stat-card"><h3 id="totalUsers">0</h3><p>Users Using App</p></div>
-    </div>
-  </div>
+<div class="container">
+  <h1>App Store Admin Panel</h1>
 
-  <!-- Add App -->
-  <div class="section" id="addApp">
-    <h2 id="formTitle">Add App</h2>
-    <form id="addAppForm">
-      <div class="form-group"><label>App Name</label><input type="text" id="appName" required /></div>
-      <div class="form-group"><label>Logo URL</label><input type="url" id="appLogo" required /></div>
-      <div class="form-group"><label>Version</label><input type="text" id="appVersion" required /></div>
-      <div class="form-group"><label>Download Link</label><input type="url" id="appLink" required /></div>
-      <div class="form-group"><label>Category</label><select id="appCategory" required><option disabled selected>Loading...</option></select></div>
-      <div class="form-group"><label>Description</label><textarea id="appDescription" rows="4"></textarea></div>
-      <div class="form-group"><label>Screenshot 1</label><input type="url" id="screenshot1" /></div>
-      <div class="form-group"><label>Screenshot 2</label><input type="url" id="screenshot2" /></div>
-      <div class="form-group"><label>Screenshot 3</label><input type="url" id="screenshot3" /></div>
-      <div class="form-group"><label>Screenshot 4</label><input type="url" id="screenshot4" /></div>
-      <button type="submit" id="submitBtn">Publish App</button>
-      <p id="app-status" class="status-success"></p>
+  <!-- Section: Add App -->
+  <section class="admin-section">
+    <h2>Add New App</h2>
+    <form id="add-app-form">
+      <div class="form-group">
+        <label for="appName">App Name</label>
+        <input type="text" id="appName" required>
+      </div>
+      <div class="form-group">
+        <label for="appLogo">App Logo URL</label>
+        <input type="url" id="appLogo" required>
+      </div>
+      <div class="form-group">
+        <label for="appVersion">App Version</label>
+        <input type="text" id="appVersion" required>
+      </div>
+      <div class="form-group">
+        <label for="appLink">App Download Link</label>
+        <input type="url" id="appLink" required>
+      </div>
+      <div class="form-group">
+        <label for="appCategory">App Category</label>
+        <select id="appCategory" required>
+          <option value="" disabled selected>Loading categories...</option>
+        </select>
+      </div>
+      <button type="submit">Publish App</button>
+      <p id="app-status-message"></p>
     </form>
-  </div>
+  </section>
 
-  <!-- Manage Categories -->
-  <div class="section" id="categories">
+  <!-- Section: Manage Categories -->
+  <section class="admin-section">
     <h2>Manage Categories</h2>
     <form id="add-category-form">
-      <div class="form-group"><label>New Category</label><input type="text" id="newCategoryName" required></div>
+      <div class="form-group">
+        <label for="newCategoryName">New Category Name</label>
+        <input type="text" id="newCategoryName" required>
+      </div>
       <button type="submit">Add Category</button>
     </form>
+
+    <h3 style="margin-top: 30px; margin-bottom: 15px; font-weight: 400;">Existing Categories</h3>
     <ul id="category-list"><li>Loading...</li></ul>
-    <p id="category-status"></p>
-  </div>
+    <p id="category-status-message"></p>
+  </section>
 
-  <!-- Manage Apps -->
-  <div class="section" id="apps">
+  <!-- Section: Manage Apps -->
+  <section class="admin-section">
     <h2>Manage Apps</h2>
-    <input type="text" id="searchApp" placeholder="Search apps..." style="margin-bottom: 20px; width: 100%; padding: 10px;">
-    <ul id="app-list"><li>Loading apps...</li></ul>
-    <p id="app-delete-status"></p>
-  </div>
-
-  <!-- Send Notification -->
-  <div class="section" id="notification">
-    <h2>Send Notification</h2>
-    <form id="send-notification-form">
-      <div class="form-group"><label>Title</label><input type="text" id="notificationTitle" required></div>
-      <div class="form-group"><label>Message</label><input type="text" id="notificationMessage" required></div>
-      <button type="submit">Send</button>
-      <p id="notification-status"></p>
-    </form>
-  </div>
-
-  <!-- Settings -->
-  <div class="section" id="settings">
-    <h2>Settings</h2>
     <div class="form-group">
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="maintenanceModeToggle">
-        <label for="maintenanceModeToggle">Enable Maintenance Mode</label>
-      </div>
-      <div id="maintenanceResult" class="form-result"></div>
+      <label for="searchApp">Search App</label>
+      <input type="text" id="searchApp" placeholder="Type app name to search...">
     </div>
-    <div class="form-group"><label>App Version</label><input type="text" id="versionInput" placeholder="Enter version"></div>
-    <div class="form-group"><label>Update Message</label><input type="text" id="messageInput" placeholder="Enter update message"></div>
-    <div class="form-group"><label>Update Link</label><input type="text" id="linkInput" placeholder="Enter update link"></div>
-    <button id="saveSettingsBtn">Save Settings</button>
-    <div id="settingsResult" class="form-result"></div>
-  </div>
+    <ul id="app-list"><li>Loading apps...</li></ul>
+    <p id="app-delete-status-message"></p>
+  </section>
 </div>
 
-<!-- Firebase SDKs -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
 <script>
-  // Firebase Config
-  const firebaseConfig = {
-    apiKey: "AIzaSyCyeCIbVLKxlG8ZnD7Pgd0396IMpAPGpqE",
-    authDomain: "app-store-stocks.firebaseapp.com",
-    databaseURL: "https://app-store-stocks-default-rtdb.firebaseio.com",
-    projectId: "app-store-stocks",
-    storageBucket: "app-store-stocks.firebasestorage.app",
-    messagingSenderId: "1066420357396",
-    appId: "1:1066420357396:web:99348a13f243bfb5601a01"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCyeCIbVLKxlG8ZnD7Pgd0396IMpAPGpqE",
+  authDomain: "app-store-stocks.firebaseapp.com",
+  databaseURL: "https://app-store-stocks-default-rtdb.firebaseio.com",
+  projectId: "app-store-stocks",
+  storageBucket: "app-store-stocks.firebasestorage.app",
+  messagingSenderId: "1066420357396",
+  appId: "1:1066420357396:web:99348a13f243bfb5601a01"
+};
+
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-  const rtdb = firebase.database();
 
-  // Sidebar Toggle
-  document.querySelector('.menu-toggle').onclick = () => {
-    document.querySelector('.sidebar').classList.toggle('open');
-    document.querySelector('.main').classList.toggle('shifted');
-  };
-
-  function showSection(id) {
-    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
-
-  const showStatus = (el, msg, success) => {
-    el.textContent = msg;
-    el.className = success ? 'status-success' : 'status-error';
-    setTimeout(() => el.textContent = '', 3000);
-  };
-
-  // DOM Elements
-  const appCategory = document.getElementById('appCategory');
+  const addAppForm = document.getElementById('add-app-form');
+  const addCategoryForm = document.getElementById('add-category-form');
+  const appCategorySelect = document.getElementById('appCategory');
   const categoryList = document.getElementById('category-list');
   const appList = document.getElementById('app-list');
-  const searchApp = document.getElementById('searchApp');
-  const appStatus = document.getElementById('app-status');
-  const appDeleteStatus = document.getElementById('app-delete-status');
-  const notificationStatus = document.getElementById('notification-status');
-  const categoryStatus = document.getElementById('category-status');
-  const maintenanceToggle = document.getElementById('maintenanceModeToggle');
-  const versionInput = document.getElementById('versionInput');
-  const messageInput = document.getElementById('messageInput');
-  const linkInput = document.getElementById('linkInput');
-  const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-  const maintenanceResult = document.getElementById('maintenanceResult');
-  const settingsResult = document.getElementById('settingsResult');
-  const formTitle = document.getElementById('formTitle');
-  const submitBtn = document.getElementById('submitBtn');
+  const appStatusMessage = document.getElementById('app-status-message');
+  const categoryStatusMessage = document.getElementById('category-status-message');
+  const appDeleteStatusMessage = document.getElementById('app-delete-status-message');
+  const searchInput = document.getElementById('searchApp');
 
-  // Load Categories
-  db.collection("categories").orderBy("name").onSnapshot(snapshot => {
-    appCategory.innerHTML = '<option disabled selected>Select a category</option>';
+  const showStatus = (element, message, isSuccess) => {
+    element.textContent = message;
+    element.className = isSuccess ? 'status-success' : 'status-error';
+    element.style.display = 'block';
+    setTimeout(() => {
+      element.style.display = 'none';
+    }, 3000);
+  };
+
+  // Fetch Categories
+  db.collection('categories').orderBy('name').onSnapshot(snapshot => {
+    appCategorySelect.innerHTML = '<option value="" disabled selected>Select a category</option>';
     categoryList.innerHTML = '';
+
+    if (snapshot.empty) {
+      categoryList.innerHTML = '<li>No categories found. Add one above!</li>';
+    }
+
     snapshot.forEach(doc => {
-      const cat = doc.data();
-      appCategory.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
-      categoryList.innerHTML += `<li>${cat.name}<button class="delete-btn" onclick="deleteCategory('${doc.id}')">✖</button></li>`;
+      const category = doc.data();
+      const categoryId = doc.id;
+
+      const option = document.createElement('option');
+      option.value = category.name;
+      option.textContent = category.name;
+      appCategorySelect.appendChild(option);
+
+      const li = document.createElement('li');
+      li.textContent = category.name;
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = '✖';
+      deleteButton.className = 'delete-btn';
+      deleteButton.dataset.id = categoryId;
+
+      li.appendChild(deleteButton);
+      categoryList.appendChild(li);
     });
-    document.getElementById('totalCategories').textContent = snapshot.size;
   });
 
-  function deleteCategory(id) {
-    if (confirm("Delete this category?")) {
-      db.collection("categories").doc(id).delete()
-        .then(() => showStatus(categoryStatus, "Deleted", true))
-        .catch(e => showStatus(categoryStatus, e.message, false));
-    }
-  }
-
-  document.getElementById("add-category-form").addEventListener("submit", e => {
+  // Add Category
+  addCategoryForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const name = document.getElementById("newCategoryName").value.trim();
-    if (name) {
-      db.collection("categories").add({ name })
+    const newCategoryName = document.getElementById('newCategoryName').value.trim();
+    if (newCategoryName) {
+      db.collection('categories').add({ name: newCategoryName })
         .then(() => {
-          showStatus(categoryStatus, "Category Added", true);
-          e.target.reset();
+          showStatus(categoryStatusMessage, 'Category added successfully!', true);
+          addCategoryForm.reset();
         })
-        .catch(err => showStatus(categoryStatus, err.message, false));
+        .catch(error => {
+          showStatus(categoryStatusMessage, `Error: ${error.message}`, false);
+        });
     }
   });
 
-  // Apps
-  let apps = [];
-  let editingAppId = null;
-  db.collection("apps").orderBy("name").onSnapshot(snapshot => {
-    apps = [];
-    appList.innerHTML = '';
-    snapshot.forEach(doc => {
-      const app = { ...doc.data(), id: doc.id };
-      apps.push(app);
-    });
-    renderApps(apps);
-    document.getElementById('totalApps').textContent = snapshot.size;
+  // Delete Category
+  categoryList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('delete-btn')) {
+      const categoryId = e.target.dataset.id;
+      if (confirm('Are you sure you want to delete this category?')) {
+        db.collection('categories').doc(categoryId).delete()
+          .then(() => {
+            showStatus(categoryStatusMessage, 'Category deleted!', true);
+          })
+          .catch(error => {
+            showStatus(categoryStatusMessage, `Error: ${error.message}`, false);
+          });
+      }
+    }
   });
 
-  function renderApps(list) {
+  // Add App
+  addAppForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const newApp = {
+      name: document.getElementById('appName').value,
+      logoUrl: document.getElementById('appLogo').value,
+      version: document.getElementById('appVersion').value,
+      downloadLink: document.getElementById('appLink').value,
+      category: document.getElementById('appCategory').value,
+    };
+
+    db.collection('apps').add(newApp)
+      .then(() => {
+        showStatus(appStatusMessage, 'App published successfully!', true);
+        addAppForm.reset();
+        appCategorySelect.selectedIndex = 0;
+      })
+      .catch(error => {
+        showStatus(appStatusMessage, `Error: ${error.message}`, false);
+      });
+  });
+
+  // Manage and Search Apps
+  let allApps = [];
+
+  db.collection('apps').orderBy('name').onSnapshot(snapshot => {
+    allApps = [];
+    if (snapshot.empty) {
+      appList.innerHTML = '<li>No apps found.</li>';
+      return;
+    }
+
+    snapshot.forEach(doc => {
+      const app = doc.data();
+      app.id = doc.id;
+      allApps.push(app);
+    });
+
+    renderApps(allApps);
+  });
+
+  function renderApps(apps) {
     appList.innerHTML = '';
-    if (list.length === 0) return appList.innerHTML = "<li>No apps</li>";
-    list.forEach(app => {
-      const li = document.createElement("li");
+    if (apps.length === 0) {
+      appList.innerHTML = '<li>No apps matched your search.</li>';
+      return;
+    }
+
+    apps.forEach(app => {
+      const li = document.createElement('li');
       li.innerHTML = `
-        <div><strong>${app.name}</strong><br><small>${app.category} - v${app.version}</small></div>
-        <button class="delete-app-btn" onclick="deleteApp('${app.id}')">Delete</button>
-        <button class="edit-app-btn" onclick="editApp('${app.id}')">Edit</button>
+        <div>
+          <strong>${app.name}</strong><br>
+          <small style="color: var(--secondary-text);">${app.category} - v${app.version}</small>
+        </div>
       `;
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.className = 'delete-app-btn';
+      deleteButton.addEventListener('click', () => {
+        if (confirm(`Delete app "${app.name}"?`)) {
+          db.collection('apps').doc(app.id).delete()
+            .then(() => showStatus(appDeleteStatusMessage, 'App deleted successfully!', true))
+            .catch(err => showStatus(appDeleteStatusMessage, `Error: ${err.message}`, false));
+        }
+      });
+
+      li.appendChild(deleteButton);
       appList.appendChild(li);
     });
   }
 
-  function deleteApp(id) {
-    if (confirm("Delete this app?")) {
-      db.collection("apps").doc(id).delete()
-        .then(() => showStatus(appDeleteStatus, "App deleted", true))
-        .catch(err => showStatus(appDeleteStatus, err.message, false));
-    }
-  }
-
-  function editApp(id) {
-    const app = apps.find(a => a.id === id);
-    if (!app) return;
-    showSection('addApp');
-    formTitle.textContent = "Edit App";
-    submitBtn.textContent = "Update App";
-
-    document.getElementById('appName').value = app.name || '';
-    document.getElementById('appLogo').value = app.logoUrl || '';
-    document.getElementById('appVersion').value = app.version || '';
-    document.getElementById('appLink').value = app.downloadLink || '';
-    document.getElementById('appCategory').value = app.category || '';
-    document.getElementById('appDescription').value = app.description || '';
-
-    if (app.screenshots) {
-      document.getElementById('screenshot1').value = app.screenshots[0] || '';
-      document.getElementById('screenshot2').value = app.screenshots[1] || '';
-      document.getElementById('screenshot3').value = app.screenshots[2] || '';
-      document.getElementById('screenshot4').value = app.screenshots[3] || '';
-    }
-
-    editingAppId = id;
-  }
-
-  // Search Apps
-  searchApp.addEventListener("input", () => {
-    const q = searchApp.value.toLowerCase();
-    renderApps(apps.filter(app => app.name.toLowerCase().includes(q)));
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase();
+    const filteredApps = allApps.filter(app => app.name.toLowerCase().includes(query));
+    renderApps(filteredApps);
   });
+function renderApps(apps) {
+  appList.innerHTML = '';
+  if (apps.length === 0) {
+    appList.innerHTML = '<li>No apps matched your search.</li>';
+    return;
+  }
 
-  // Add / Edit App Submit
-  document.getElementById("addAppForm").addEventListener("submit", e => {
-    e.preventDefault();
-    const appData = {
-      name: appName.value.trim(),
-      logoUrl: appLogo.value.trim(),
-      version: appVersion.value.trim(),
-      downloadLink: appLink.value.trim(),
-      category: appCategory.value.trim(),
-      description: appDescription.value.trim(),
-      screenshots: [
-        screenshot1.value.trim(),
-        screenshot2.value.trim(),
-        screenshot3.value.trim(),
-        screenshot4.value.trim()
-      ].filter(link => link !== "")
-    };
+  apps.forEach(app => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <div>
+        <strong>${app.name}</strong><br>
+        <small style="color: var(--secondary-text);">${app.category} - v${app.version}</small>
+      </div>
+    `;
 
-    if (editingAppId) {
-      // Update existing app
-      db.collection("apps").doc(editingAppId).update(appData)
-        .then(() => {
-          showStatus(appStatus, "App updated", true);
-          e.target.reset();
-          editingAppId = null;
-          formTitle.textContent = "Add App";
-          submitBtn.textContent = "Publish App";
+    // Edit Button
+    const editButton = document.createElement('button');
+    editButton.textContent = 'Edit';
+    editButton.className = 'delete-app-btn';
+    editButton.style.backgroundColor = '#ffc107'; // yellow style for edit
+    editButton.style.marginRight = '8px';
+
+    editButton.addEventListener('click', () => {
+      // Show a prompt-based edit form (simple version)
+      const newName = prompt("Edit App Name:", app.name);
+      const newLogo = prompt("Edit App Logo URL:", app.logoUrl);
+      const newVersion = prompt("Edit App Version:", app.version);
+      const newLink = prompt("Edit App Download Link:", app.downloadLink);
+      const newCategory = prompt("Edit App Category:", app.category);
+
+      if (newName && newLogo && newVersion && newLink && newCategory) {
+        db.collection('apps').doc(app.id).update({
+          name: newName,
+          logoUrl: newLogo,
+          version: newVersion,
+          downloadLink: newLink,
+          category: newCategory
         })
-        .catch(err => showStatus(appStatus, err.message, false));
-    } else {
-      // Add new app
-      db.collection("apps").add(appData)
         .then(() => {
-          showStatus(appStatus, "App added", true);
-          e.target.reset();
+          showStatus(appDeleteStatusMessage, 'App updated successfully!', true);
         })
-        .catch(err => showStatus(appStatus, err.message, false));
-    }
-  });
+        .catch(err => {
+          showStatus(appDeleteStatusMessage, `Error: ${err.message}`, false);
+        });
+      }
+    });
 
-  // Notifications
-  document.getElementById("send-notification-form").addEventListener("submit", e => {
-    e.preventDefault();
-    const title = notificationTitle.value.trim();
-    const message = notificationMessage.value.trim();
-    db.collection("notifications").add({ title, message, timestamp: new Date().toISOString() })
-      .then(() => {
-        showStatus(notificationStatus, "Notification sent", true);
-        e.target.reset();
-      })
-      .catch(err => showStatus(notificationStatus, err.message, false));
-  });
+    // Delete Button
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.className = 'delete-app-btn';
+    deleteButton.addEventListener('click', () => {
+      if (confirm(`Delete app "${app.name}"?`)) {
+        db.collection('apps').doc(app.id).delete()
+          .then(() => showStatus(appDeleteStatusMessage, 'App deleted successfully!', true))
+          .catch(err => showStatus(appDeleteStatusMessage, `Error: ${err.message}`, false));
+      }
+    });
 
-  db.collection("notifications").onSnapshot(snap => {
-    document.getElementById('totalNotifications').textContent = snap.size;
+    li.appendChild(editButton);
+    li.appendChild(deleteButton);
+    appList.appendChild(li);
   });
-
-  db.collection("users").onSnapshot(snap => {
-    document.getElementById('totalUsers').textContent = snap.size;
-  });
-
-  // Settings (Realtime DB)
-  const appupdateRef = rtdb.ref('settings/appupdate');
-  appupdateRef.on('value', snapshot => {
-    const data = snapshot.val();
-    if (data) {
-      maintenanceToggle.checked = data.maintenanceMode === 'true';
-      versionInput.value = data.version || '';
-      messageInput.value = data.message || '';
-      linkInput.value = data.link || '';
-    }
-  });
-
-  maintenanceToggle.addEventListener('change', () => {
-    const mode = maintenanceToggle.checked ? 'true' : 'false';
-    rtdb.ref('settings/appupdate').update({ maintenanceMode: mode })
-      .then(() => showResult(maintenanceResult, `Maintenance ${mode === 'true' ? 'enabled' : 'disabled'}`, 'success'))
-      .catch(err => showResult(maintenanceResult, err.message, 'error'));
-  });
-
-  saveSettingsBtn.addEventListener('click', () => {
-    const data = {
-      maintenanceMode: maintenanceToggle.checked ? 'true' : 'false',
-      version: versionInput.value.trim(),
-      message: messageInput.value.trim(),
-      link: linkInput.value.trim()
-    };
-    rtdb.ref('settings/appupdate').update(data)
-      .then(() => showResult(settingsResult, "Settings saved", 'success'))
-      .catch(err => showResult(settingsResult, err.message, 'error'));
-  });
-
-  function showResult(el, msg, type) {
-    el.textContent = msg;
-    el.className = `form-result ${type}`;
-    setTimeout(() => {
-      el.textContent = '';
-      el.className = 'form-result';
-    }, 3000);
-  }
+}
 </script>
 </body>
 </html>
