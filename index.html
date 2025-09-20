@@ -209,6 +209,16 @@
     <ul id="app-list"><li>Loading apps...</li></ul>
     <p id="app-delete-status-message"></p>
   </section>
+
+<!-- SEND NOTIFICATION -->
+<div class="section" id="notification">
+  <h2>Send Notification</h2>
+  <form id="send-notification-form">
+    <div class="form-group"><label>Title</label><input type="text" id="notificationTitle" required></div>
+    <div class="form-group"><label>Message</label><input type="text" id="notificationMessage" required></div>
+    <button type="submit">Send</button>
+    <p id="notification-status"></p>
+  </form>
 </div>
 
 <!-- Firebase SDK -->
@@ -247,6 +257,22 @@ const firebaseConfig = {
       element.style.display = 'none';
     }, 3000);
   };
+
+  document.getElementById("send-notification-form").addEventListener("submit", e => {
+    e.preventDefault();
+    const title = notificationTitle.value.trim();
+    const message = notificationMessage.value.trim();
+    db.collection("notifications").add({ title, message, timestamp: new Date().toISOString() })
+      .then(() => {
+        showStatus(notificationStatus, "Notification sent", true);
+        e.target.reset();
+      })
+      .catch(err => showStatus(notificationStatus, err.message, false));
+  });
+
+  db.collection("notifications").onSnapshot(snap => {
+    document.getElementById('totalNotifications').textContent = snap.size;
+  });
 
   // Fetch Categories
   db.collection('categories').orderBy('name').onSnapshot(snapshot => {
