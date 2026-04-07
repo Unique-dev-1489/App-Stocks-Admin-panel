@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Shared Styles from user.html for consistency */
         :root {
             --bg-color: #0f0c29;
             --glass-bg: rgba(255, 255, 255, 0.05);
@@ -21,6 +20,7 @@
             --accent-gradient: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
             --success-color: #28a745;
             --danger-color: #dc3545;
+            --warning-color: #ffc107;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-color) url('https://www.transparenttextures.com/patterns/cubes.png'); color: var(--text-color); line-height: 1.6; }
@@ -29,11 +29,14 @@
         .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; border: none; }
         .btn-primary { background: var(--accent-gradient); color: #fff; box-shadow: 0 0 15px rgba(255, 0, 255, 0.4); }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(255, 0, 255, 0.6); }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+        .btn-success { background: var(--success-color); color: white; }
+        .btn-danger { background: var(--danger-color); color: white; }
+        .btn-warning { background: var(--warning-color); color: #333; }
         h1, h2, h3 { background: var(--accent-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
         input, textarea, select { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-color); font-family: 'Poppins', sans-serif; margin-bottom: 15px; }
         input:focus, textarea:focus { outline: none; border-color: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
         
-        /* --- Admin Specific Styles --- */
         .hidden { display: none !important; }
         .login-container { max-width: 400px; margin: 100px auto; }
         .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
@@ -46,25 +49,43 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .list-item:last-child { border-bottom: none; }
         .list-item .info { flex-grow: 1; }
         .list-item .info strong { color: #fff; }
-        .list-item .actions button, .list-item .actions .toggle-switch { margin-left: 10px; }
-        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
-        .btn-success { background: var(--success-color); color: white; }
-        .btn-danger { background: var(--danger-color); color: white; }
-
+        .list-item .info small { font-size: 0.75rem; }
+        .list-item .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         #item-form-container { position: sticky; top: 20px; }
 
-        /* Fancy Toggle Switch for Featured status */
         .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background: var(--neon-magenta); }
         input:checked + .slider:before { transform: translateX(24px); }
+        
+        .stats-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .stats-downloads { background: var(--success-color); color: white; }
+        .stats-size { background: var(--neon-cyan); color: #333; }
+        .stats-version { background: var(--warning-color); color: #333; }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+        .status-update { background: #17a2b8; color: white; }
     </style>
 </head>
 <body>
@@ -72,7 +93,7 @@
     <!-- Login View -->
     <div id="login-view" class="container login-container">
         <div class="glass-panel">
-            <h1>Admin Login</h1>
+            <h1>🔐 Admin Login</h1>
             <form id="login-form">
                 <input type="email" id="login-email" placeholder="Email" required>
                 <input type="password" id="login-password" placeholder="Password" required>
@@ -85,7 +106,7 @@
     <!-- Dashboard View -->
     <div id="dashboard-view" class="container hidden">
         <header class="dashboard-header">
-            <h1>Admin Dashboard</h1>
+            <h1>📊 Admin Dashboard</h1>
             <div>
                 <span id="admin-email" style="margin-right: 20px;"></span>
                 <button id="logout-btn" class="btn btn-primary">Logout</button>
@@ -95,7 +116,7 @@
         <main class="admin-sections">
             <!-- Left Column: Add/Edit Form -->
             <div id="item-form-container" class="glass-panel">
-                <h2 id="form-title" class="section-title">Add New Item</h2>
+                <h2 id="form-title" class="section-title">➕ Add New Item</h2>
                 <form id="item-form">
                     <input type="hidden" id="item-id">
                     <input type="hidden" id="pending-id">
@@ -108,10 +129,11 @@
                     </div>
                     <textarea id="item-description" placeholder="Description" rows="4" required></textarea>
                     <input type="text" id="item-publisherName" placeholder="Publisher Name" required>
+                    <input type="text" id="item-publisherEmail" placeholder="Publisher Email" required>
                     <input type="text" id="item-screenshots" placeholder="Screenshots (comma-separated URLs)">
                     
                     <div class="form-grid">
-                         <select id="item-type" required>
+                        <select id="item-type" required>
                             <option value="App">App</option>
                             <option value="Game">Game</option>
                         </select>
@@ -121,11 +143,25 @@
                         </select>
                     </div>
                     
+                    <div class="form-grid">
+                        <input type="text" id="item-version" placeholder="Version (e.g., 1.0.0)" required>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="item-sizeMB" placeholder="Size" step="0.1" required style="flex:2;">
+                            <select id="item-sizeUnit" style="flex:1;">
+                                <option value="KB">KB</option>
+                                <option value="MB" selected>MB</option>
+                                <option value="GB">GB</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <textarea id="item-embedCode" placeholder="HTML Embed Code" rows="4" class="hidden"></textarea>
                     <input type="url" id="item-downloadLink" placeholder="Download Link" class="hidden">
                     
-                    <button type="submit" class="btn btn-primary">Save Item</button>
-                    <button type="button" id="clear-form-btn" class="btn" style="background: #555;">Clear Form</button>
+                    <div class="form-grid">
+                        <button type="submit" class="btn btn-primary">💾 Save Item</button>
+                        <button type="button" id="clear-form-btn" class="btn" style="background: #555;">🗑 Clear Form</button>
+                    </div>
                 </form>
             </div>
 
@@ -133,13 +169,13 @@
             <div>
                 <!-- Pending Submissions -->
                 <div class="glass-panel" style="margin-bottom: 30px;">
-                    <h2 class="section-title">Pending Submissions</h2>
+                    <h2 class="section-title">⏳ Pending Submissions</h2>
                     <div id="pending-submissions-list"></div>
                 </div>
 
                 <!-- Published Items -->
                 <div class="glass-panel">
-                    <h2 class="section-title">Published Items</h2>
+                    <h2 class="section-title">📦 Published Items</h2>
                     <div id="published-items-list"></div>
                 </div>
             </div>
@@ -154,15 +190,14 @@
     <script>
     // --- FIREBASE CONFIGURATION ---
     const firebaseConfig = {
-  apiKey: "AIzaSyCyeCIbVLKxlG8ZnD7Pgd0396IMpAPGpqE",
-  authDomain: "app-store-stocks.firebaseapp.com",
-  databaseURL: "https://app-store-stocks-default-rtdb.firebaseio.com",
-  projectId: "app-store-stocks",
-  storageBucket: "app-store-stocks.firebasestorage.app",
-  messagingSenderId: "1066420357396",
-  appId: "1:1066420357396:web:99348a13f243bfb5601a01"
-
-};
+        apiKey: "AIzaSyCyeCIbVLKxlG8ZnD7Pgd0396IMpAPGpqE",
+        authDomain: "app-store-stocks.firebaseapp.com",
+        databaseURL: "https://app-store-stocks-default-rtdb.firebaseio.com",
+        projectId: "app-store-stocks",
+        storageBucket: "app-store-stocks.firebasestorage.app",
+        messagingSenderId: "1066420357396",
+        appId: "1:1066420357396:web:99348a13f243bfb5601a01"
+    };
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
@@ -189,6 +224,13 @@
     
     // --- UTILITY ---
     const sanitizeEmail = (email) => email.replace(/[.#$[\]]/g, "_");
+    
+    const formatFileSize = (sizeMB, unit) => {
+        if (!sizeMB) return 'N/A';
+        if (unit === 'GB') return `${sizeMB} GB`;
+        if (unit === 'KB') return `${sizeMB} KB`;
+        return `${sizeMB} MB`;
+    };
 
     // --- AUTHENTICATION ---
     auth.onAuthStateChanged(user => {
@@ -217,6 +259,15 @@
     function initDashboard() {
         loadPendingSubmissions();
         loadPublishedItems();
+        setupSubmissionTypeToggle();
+    }
+    
+    function setupSubmissionTypeToggle() {
+        DOM.submissionTypeSelect.addEventListener('change', (e) => {
+            const isEmbed = e.target.value === 'embed';
+            DOM.embedCodeInput.classList.toggle('hidden', !isEmbed);
+            DOM.downloadLinkInput.classList.toggle('hidden', isEmbed);
+        });
     }
     
     // --- DATA LOADING & RENDERING ---
@@ -224,22 +275,29 @@
         database.ref('pendingSubmissions').on('value', snapshot => {
             DOM.pendingList.innerHTML = '';
             if (!snapshot.exists()) {
-                DOM.pendingList.innerHTML = '<p style="padding: 15px;">No pending submissions.</p>';
+                DOM.pendingList.innerHTML = '<p style="padding: 15px;">✨ No pending submissions.</p>';
                 return;
             }
             snapshot.forEach(child => {
                 const id = child.key;
                 const sub = child.val();
+                const isUpdate = !!sub.updateOf;
+                const sizeText = sub.sizeMB ? formatFileSize(sub.sizeMB, sub.sizeUnit || 'MB') : 'Size N/A';
+                
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'list-item';
                 itemDiv.innerHTML = `
                     <div class="info">
                         <strong>${sub.title}</strong><br>
-                        <small>by ${sub.submitterName} (${sub.type}) ${sub.updateOf ? '(Update Request)' : ''}</small>
+                        <small>
+                            by ${sub.submitterName} (${sub.type}) 
+                            ${isUpdate ? '<span class="status-badge status-update">🔄 Update Request</span>' : ''}
+                        </small><br>
+                        <small>📦 ${sizeText} | 📌 v${sub.version || '1.0.0'}</small>
                     </div>
                     <div class="actions">
-                        <button class="btn btn-sm btn-success approve-btn" data-id="${id}">Approve</button>
-                        <button class="btn btn-sm btn-danger reject-btn" data-id="${id}">Reject</button>
+                        <button class="btn btn-sm btn-success approve-btn" data-id="${id}">✓ Approve</button>
+                        <button class="btn btn-sm btn-danger reject-btn" data-id="${id}">✗ Reject</button>
                     </div>
                 `;
                 DOM.pendingList.appendChild(itemDiv);
@@ -255,20 +313,28 @@
                 items.push({ id: child.key, ...child.val() });
             });
             items.reverse().forEach(item => {
+                const downloads = item.downloads || 0;
+                const sizeText = item.sizeMB ? formatFileSize(item.sizeMB, item.sizeUnit || 'MB') : 'Size N/A';
+                
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'list-item';
                 itemDiv.innerHTML = `
                     <div class="info">
                         <strong>${item.title}</strong><br>
-                        <small>by ${item.publisherName} (${item.type})</small>
+                        <small>by ${item.publisherName} (${item.type})</small><br>
+                        <small>
+                            <span class="stats-badge stats-downloads">📥 ${downloads}</span>
+                            <span class="stats-badge stats-size">💾 ${sizeText}</span>
+                            <span class="stats-badge stats-version">📌 v${item.version || '1.0.0'}</span>
+                        </small>
                     </div>
                     <div class="actions">
-                        <label class="toggle-switch">
+                        <label class="toggle-switch" title="Featured">
                           <input type="checkbox" class="featured-toggle" data-id="${item.id}" ${item.isFeatured ? 'checked' : ''}>
                           <span class="slider"></span>
                         </label>
-                        <button class="btn btn-sm edit-btn" data-id="${item.id}">Edit</button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="${item.id}">Delete</button>
+                        <button class="btn btn-sm edit-btn" data-id="${item.id}">✏️ Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="${item.id}">🗑 Delete</button>
                     </div>
                 `;
                 DOM.publishedList.appendChild(itemDiv);
@@ -279,34 +345,38 @@
     // --- FORM HANDLING ---
     function clearForm() {
         DOM.itemForm.reset();
-        DOM.formTitle.textContent = "Add New Item";
-        DOM.itemForm.querySelector('#item-id').value = '';
-        DOM.itemForm.querySelector('#pending-id').value = '';
-        DOM.itemForm.querySelector('#submitter-email').value = '';
-        DOM.itemForm.querySelector('#update-of-id').value = '';
+        DOM.formTitle.textContent = "➕ Add New Item";
+        document.getElementById('item-id').value = '';
+        document.getElementById('pending-id').value = '';
+        document.getElementById('submitter-email').value = '';
+        document.getElementById('update-of-id').value = '';
         DOM.embedCodeInput.classList.add('hidden');
         DOM.downloadLinkInput.classList.add('hidden');
     }
     
-    DOM.submissionTypeSelect.addEventListener('change', (e) => {
-        const isEmbed = e.target.value === 'embed';
-        DOM.embedCodeInput.classList.toggle('hidden', !isEmbed);
-        DOM.downloadLinkInput.classList.toggle('hidden', isEmbed);
-    });
-
     DOM.clearFormBtn.addEventListener('click', clearForm);
     
     DOM.itemForm.addEventListener('submit', (e) => {
         e.preventDefault();
+        
+        const sizeMB = parseFloat(document.getElementById('item-sizeMB').value);
+        if (isNaN(sizeMB) || sizeMB <= 0) {
+            alert('Please enter a valid file size');
+            return;
+        }
         
         const formData = {
             title: document.getElementById('item-title').value,
             description: document.getElementById('item-description').value,
             logoUrl: document.getElementById('item-logoUrl').value,
             publisherName: document.getElementById('item-publisherName').value,
+            publisherEmail: document.getElementById('item-publisherEmail').value,
             screenshots: document.getElementById('item-screenshots').value.split(',').map(s => s.trim()).filter(s => s),
             type: document.getElementById('item-type').value,
             submissionType: document.getElementById('item-submissionType').value,
+            version: document.getElementById('item-version').value,
+            sizeMB: sizeMB,
+            sizeUnit: document.getElementById('item-sizeUnit').value,
             embedCode: document.getElementById('item-embedCode').value,
             downloadLink: document.getElementById('item-downloadLink').value,
             updatedAt: firebase.database.ServerValue.TIMESTAMP
@@ -317,34 +387,37 @@
         const submitterEmail = document.getElementById('submitter-email').value;
         const updateOfId = document.getElementById('update-of-id').value;
 
-        if (itemId) { // Editing existing item
+        if (itemId) {
+            // Editing existing item
             database.ref(`items/${itemId}`).update(formData).then(() => {
-                alert('Item updated successfully!');
+                alert('✅ Item updated successfully!');
                 clearForm();
             });
-        } else { // New item (could be from approval or direct add)
-             if (updateOfId) { // This is an update approval
+        } else {
+            if (updateOfId) {
+                // This is an update approval
                 database.ref(`items/${updateOfId}`).update(formData)
                     .then(() => {
                         database.ref(`pendingSubmissions/${pendingId}`).remove();
-                        sendNotification(submitterEmail, formData.title, 'approved', 'Your update request was approved.');
-                        alert('Update approved and published!');
+                        sendNotification(submitterEmail, formData.title, 'approved', `Your update request for "${formData.title}" was approved!`);
+                        alert('✅ Update approved and published!');
                         clearForm();
                     });
-            } else { // This is a new submission approval or direct add
+            } else {
+                // This is a new submission approval or direct add
                 formData.publishedAt = firebase.database.ServerValue.TIMESTAMP;
                 formData.avgRating = 0;
                 formData.totalRatings = 0;
                 formData.sumOfRatings = 0;
+                formData.downloads = 0;
                 formData.isFeatured = false;
-                formData.publisherEmail = submitterEmail || auth.currentUser.email;
 
                 database.ref('items').push(formData).then(() => {
                     if (pendingId) {
                         database.ref(`pendingSubmissions/${pendingId}`).remove();
-                        sendNotification(submitterEmail, formData.title, 'approved', 'Your submission has been approved!');
+                        sendNotification(submitterEmail, formData.title, 'approved', `Your submission "${formData.title}" has been approved and published!`);
                     }
-                    alert('Item published successfully!');
+                    alert('✅ Item published successfully!');
                     clearForm();
                 });
             }
@@ -362,26 +435,29 @@
             const sub = snapshot.val();
             
             clearForm();
-            // Pre-fill form
-            DOM.formTitle.textContent = "Approve Submission";
+            DOM.formTitle.textContent = sub.updateOf ? "🔄 Approve Update Request" : "✓ Approve Submission";
             document.getElementById('pending-id').value = id;
             document.getElementById('submitter-email').value = sub.submitterEmail;
             document.getElementById('item-title').value = sub.title;
             document.getElementById('item-description').value = sub.description;
             document.getElementById('item-logoUrl').value = sub.logoUrl;
             document.getElementById('item-publisherName').value = sub.submitterName;
+            document.getElementById('item-publisherEmail').value = sub.submitterEmail;
             document.getElementById('item-screenshots').value = (sub.screenshots || []).join(', ');
             document.getElementById('item-type').value = sub.type;
             document.getElementById('item-submissionType').value = sub.submissionType;
+            document.getElementById('item-version').value = sub.version || '1.0.0';
+            document.getElementById('item-sizeMB').value = sub.sizeMB || '';
+            document.getElementById('item-sizeUnit').value = sub.sizeUnit || 'MB';
             document.getElementById('item-embedCode').value = sub.embedCode || '';
             document.getElementById('item-downloadLink').value = sub.downloadLink || '';
+            
             if (sub.updateOf) {
                 document.getElementById('update-of-id').value = sub.updateOf;
             }
 
-            // Trigger change to show correct input field
             DOM.submissionTypeSelect.dispatchEvent(new Event('change'));
-            window.scrollTo(0, 0); // Scroll to top to see form
+            window.scrollTo(0, 0);
         }
 
         // Reject Submission
@@ -391,8 +467,8 @@
                 const snapshot = await database.ref(`pendingSubmissions/${id}`).once('value');
                 const sub = snapshot.val();
                 database.ref(`pendingSubmissions/${id}`).remove().then(() => {
-                    sendNotification(sub.submitterEmail, sub.title, 'rejected', 'Your submission was rejected.');
-                    alert('Submission rejected.');
+                    sendNotification(sub.submitterEmail, sub.title, 'rejected', `Your submission "${sub.title}" was rejected. Please check the requirements and resubmit.`);
+                    alert('❌ Submission rejected.');
                 });
             }
         }
@@ -404,15 +480,19 @@
             const item = snapshot.val();
             
             clearForm();
-            DOM.formTitle.textContent = "Edit Item";
+            DOM.formTitle.textContent = "✏️ Edit Item";
             document.getElementById('item-id').value = id;
             document.getElementById('item-title').value = item.title;
             document.getElementById('item-description').value = item.description;
             document.getElementById('item-logoUrl').value = item.logoUrl;
             document.getElementById('item-publisherName').value = item.publisherName;
+            document.getElementById('item-publisherEmail').value = item.publisherEmail || '';
             document.getElementById('item-screenshots').value = (item.screenshots || []).join(', ');
             document.getElementById('item-type').value = item.type;
             document.getElementById('item-submissionType').value = item.submissionType;
+            document.getElementById('item-version').value = item.version || '1.0.0';
+            document.getElementById('item-sizeMB').value = item.sizeMB || '';
+            document.getElementById('item-sizeUnit').value = item.sizeUnit || 'MB';
             document.getElementById('item-embedCode').value = item.embedCode || '';
             document.getElementById('item-downloadLink').value = item.downloadLink || '';
             DOM.submissionTypeSelect.dispatchEvent(new Event('change'));
@@ -422,10 +502,15 @@
         // Delete Item
         if (target.classList.contains('delete-btn')) {
             const id = target.dataset.id;
-            if (confirm('Are you sure you want to permanently delete this item AND all its reviews?')) {
+            if (confirm('⚠️ Are you sure you want to permanently delete this item AND all its reviews?')) {
+                const snapshot = await database.ref(`items/${id}`).once('value');
+                const item = snapshot.val();
                 database.ref(`items/${id}`).remove();
-                database.ref(`reviews/${id}`).remove(); // Also delete associated reviews
-                alert('Item deleted.');
+                database.ref(`reviews/${id}`).remove();
+                if (item && item.publisherEmail) {
+                    sendNotification(item.publisherEmail, item.title, 'deleted', `Your item "${item.title}" has been removed from the store.`);
+                }
+                alert('🗑 Item deleted.');
             }
         }
     });
