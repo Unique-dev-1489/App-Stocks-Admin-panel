@@ -253,6 +253,12 @@
             border-radius: 8px;
             margin-bottom: 8px;
         }
+        .stats-history { background: #6f42c1; color: white; cursor: pointer; border: none; }
+        .version-history-panel { display: none; margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.25); border-radius: 8px; }
+        .version-history-panel.open { display: block; }
+        .version-history-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--glass-border); font-size: 0.8rem; }
+        .version-history-row:last-child { border-bottom: none; }
+        .version-history-row .del-version-btn { background: var(--danger-color); color: #fff; border: none; border-radius: 6px; padding: 3px 8px; font-size: 0.7rem; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -286,7 +292,7 @@
                 <!-- Add/Edit Item Form -->
                 <div id="item-form-container" class="glass-panel">
                     <h2 id="form-title" class="section-title">➕ Add New Item</h2>
-                    <form id="item-form">
+                    <form id="item-form" autocomplete="off">
                         <input type="hidden" id="item-id">
                         <input type="hidden" id="pending-id">
                         <input type="hidden" id="submitter-email">
@@ -297,6 +303,7 @@
                             <input type="url" id="item-logoUrl" placeholder="Logo URL" required>
                         </div>
                         <textarea id="item-description" placeholder="Description" rows="4" required></textarea>
+                        <textarea id="item-whats-new" placeholder="What's New in this update (optional)" rows="3"></textarea>
                         <input type="text" id="item-publisherName" placeholder="Publisher Name" required>
                         <input type="text" id="item-publisherEmail" placeholder="Publisher Email" required>
                         <input type="text" id="item-screenshots" placeholder="Screenshots (comma-separated URLs)">
@@ -536,27 +543,31 @@
     
     // CATEGORIES MANAGEMENT
     function loadCategories() {
-        firestore.collection('categories').orderBy('name').onSnapshot(snapshot => {
+        database.ref('categories').on('value', snapshot => {
             DOM.categoriesList.innerHTML = '';
-            
-            if (snapshot.empty) {
+
+            if (!snapshot.exists()) {
                 DOM.categoriesList.innerHTML = '<p style="color: var(--text-muted);">No categories yet. Add one above!</p>';
                 return;
             }
-            
-            snapshot.forEach(doc => {
-                const category = doc.data();
-                const categoryId = doc.id;
-                
+
+            const categories = [];
+            snapshot.forEach(child => {
+                categories.push({ id: child.key, ...child.val() });
+            });
+            categories.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+            categories.forEach(category => {
                 const div = document.createElement('div');
                 div.className = 'category-item';
                 div.innerHTML = `
                     <span>${category.name}</span>
-                    <button class="btn btn-danger btn-sm" data-category-id="${categoryId}">🗑</button>
+                    <button class="btn btn-danger btn-sm" data-category-id="${category.id}">🗑</button>
                 `;
-                
                 DOM.categoriesList.appendChild(div);
             });
+        }, error => {
+            DOM.categoriesList.innerHTML = `<p style="color: var(--danger-color);">Failed to load categories: ${error.message}</p>`;
         });
     }
     
@@ -567,7 +578,7 @@
             
             if (!name) return;
             
-            firestore.collection('categories').add({ name: name })
+            database.ref('categories').push({ name: name, createdAt: firebase.database.ServerValue.TIMESTAMP })
                 .then(() => {
                     DOM.newCategoryName.value = '';
                     showNotificationStatus('✅ Category added!', true);
@@ -581,7 +592,7 @@
             if (e.target.tagName === 'BUTTON') {
                 const categoryId = e.target.dataset.categoryId;
                 if (confirm('Delete this category?')) {
-                    firestore.collection('categories').doc(categoryId).delete()
+                    database.ref('categories/' + categoryId).remove()
                         .then(() => showNotificationStatus('✅ Category deleted!', true))
                         .catch(error => showNotificationStatus('❌ Error: ' + error.message, false));
                 }
@@ -641,26 +652,41 @@
             items.reverse().forEach(item => {
                 const downloads = item.downloads || 0;
                 const sizeText = item.sizeMB ? formatFileSize(item.sizeMB, item.sizeUnit || 'MB') : 'Size N/A';
+                const versions = item.versionHistory ? Object.entries(item.versionHistory) : [];
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'list-item';
+                itemDiv.style.flexDirection = 'column';
+                itemDiv.style.alignItems = 'stretch';
                 itemDiv.innerHTML = `
-                    <div class="info">
-                        <strong>${item.title}</strong><br>
-                        <small>by ${item.publisherName} (${item.type})</small><br>
-                        <small>
-                            <span class="stats-badge stats-downloads">📥 ${downloads}</span>
-                            <span class="stats-badge stats-size">💾 ${sizeText}</span>
-                            <span class="stats-badge stats-version">📌 v${item.version || '1.0.0'}</span>
-                        </small>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; width:100%;">
+                        <div class="info">
+                            <strong>${item.title}</strong><br>
+                            <small>by ${item.publisherName} (${item.type})</small><br>
+                            <small>
+                                <span class="stats-badge stats-downloads">📥 ${downloads}</span>
+                                <span class="stats-badge stats-size">💾 ${sizeText}</span>
+                                <span class="stats-badge stats-version">📌 v${item.version || '1.0.0'}</span>
+                                ${versions.length ? `<span class="stats-badge stats-history toggle-history-btn" data-id="${item.id}">📦 ${versions.length} older version${versions.length > 1 ? 's' : ''}</span>` : ''}
+                            </small>
+                        </div>
+                        <div class="actions">
+                            <label class="toggle-switch" title="Featured">
+                              <input type="checkbox" class="featured-toggle" data-id="${item.id}" ${item.isFeatured ? 'checked' : ''}>
+                              <span class="slider"></span>
+                            </label>
+                            <button class="btn btn-sm edit-btn" data-id="${item.id}">✏️ Edit</button>
+                            <button class="btn btn-sm btn-danger delete-btn" data-id="${item.id}">🗑 Delete</button>
+                        </div>
                     </div>
-                    <div class="actions">
-                        <label class="toggle-switch" title="Featured">
-                          <input type="checkbox" class="featured-toggle" data-id="${item.id}" ${item.isFeatured ? 'checked' : ''}>
-                          <span class="slider"></span>
-                        </label>
-                        <button class="btn btn-sm edit-btn" data-id="${item.id}">✏️ Edit</button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="${item.id}">🗑 Delete</button>
-                    </div>
+                    ${versions.length ? `
+                    <div class="version-history-panel" id="history-panel-${item.id}">
+                        ${versions.slice().reverse().map(([key, v]) => `
+                            <div class="version-history-row">
+                                <span>📌 v${v.version || 'N/A'} · 💾 ${formatFileSize(v.sizeMB, v.sizeUnit || 'MB')} · <a href="${v.downloadLink}" target="_blank" style="color:var(--neon-cyan);">link</a></span>
+                                <button class="del-version-btn" data-item-id="${item.id}" data-version-key="${key}">🗑 Remove</button>
+                            </div>
+                        `).join('')}
+                    </div>` : ''}
                 `;
                 DOM.publishedList.appendChild(itemDiv);
             });
@@ -756,6 +782,7 @@
         const formData = {
             title: document.getElementById('item-title').value,
             description: document.getElementById('item-description').value,
+            whatsNew: document.getElementById('item-whats-new').value.trim() || '',
             logoUrl: document.getElementById('item-logoUrl').value,
             publisherName: document.getElementById('item-publisherName').value,
             publisherEmail: document.getElementById('item-publisherEmail').value,
@@ -781,13 +808,41 @@
             });
         } else {
             if (updateOfId) {
-                database.ref(`items/${updateOfId}`).update(formData)
-                    .then(() => {
+                const targetRef = database.ref(`items/${updateOfId}`);
+                targetRef.once('value').then(itemSnap => {
+                    const currentItem = itemSnap.val();
+                    if (!currentItem) {
+                        alert('❌ Could not find the original item to update (it may have been deleted). Approval cancelled.');
+                        return;
+                    }
+                    // Only link/download-type apps keep an "Other Versions" archive.
+                    // The version currently live gets pushed into versionHistory
+                    // before it's overwritten by the newly approved version.
+                    const archiveStep = (currentItem.submissionType === 'link')
+                        ? targetRef.child('versionHistory').push({
+                            title: currentItem.title || '',
+                            version: currentItem.version || '1.0.0',
+                            sizeMB: currentItem.sizeMB || 0,
+                            sizeUnit: currentItem.sizeUnit || 'MB',
+                            downloadLink: currentItem.downloadLink || '',
+                            whatsNew: currentItem.whatsNew || '',
+                            archivedAt: firebase.database.ServerValue.TIMESTAMP
+                        })
+                        : Promise.resolve();
+
+                    archiveStep.then(() => targetRef.update(formData)).then(() => {
                         database.ref(`pendingSubmissions/${pendingId}`).remove();
                         sendNotification(submitterEmail, formData.title, 'approved', `Your update request for "${formData.title}" was approved!`);
-                        alert('✅ Update approved and published!');
+                        alert('✅ Update approved and published! The previous version has been archived under "Other Versions".');
                         clearForm();
+                    }).catch(error => {
+                        alert('❌ Error while approving update: ' + error.message);
+                        console.error('Update approval error:', error);
                     });
+                }).catch(error => {
+                    alert('❌ Error reading the original item: ' + error.message);
+                    console.error('Fetch original item error:', error);
+                });
             } else {
                 formData.publishedAt = firebase.database.ServerValue.TIMESTAMP;
                 formData.avgRating = 0;
@@ -820,6 +875,7 @@
             document.getElementById('submitter-email').value = sub.submitterEmail;
             document.getElementById('item-title').value = sub.title;
             document.getElementById('item-description').value = sub.description;
+            document.getElementById('item-whats-new').value = sub.whatsNew || '';
             document.getElementById('item-logoUrl').value = sub.logoUrl;
             document.getElementById('item-publisherName').value = sub.submitterName;
             document.getElementById('item-publisherEmail').value = sub.submitterEmail;
@@ -858,6 +914,7 @@
             document.getElementById('item-id').value = id;
             document.getElementById('item-title').value = item.title;
             document.getElementById('item-description').value = item.description;
+            document.getElementById('item-whats-new').value = item.whatsNew || '';
             document.getElementById('item-logoUrl').value = item.logoUrl;
             document.getElementById('item-publisherName').value = item.publisherName;
             document.getElementById('item-publisherEmail').value = item.publisherEmail || '';
@@ -872,6 +929,18 @@
             DOM.submissionTypeSelect.dispatchEvent(new Event('change'));
             // Scroll to form instead of top
             document.getElementById('item-form-container').scrollIntoView({ behavior: 'smooth' });
+        }
+        if (target.classList.contains('toggle-history-btn')) {
+            const id = target.dataset.id;
+            const panel = document.getElementById(`history-panel-${id}`);
+            if (panel) panel.classList.toggle('open');
+        }
+        if (target.classList.contains('del-version-btn')) {
+            const itemId = target.dataset.itemId;
+            const versionKey = target.dataset.versionKey;
+            if (confirm('Remove this archived version entry permanently?')) {
+                database.ref(`items/${itemId}/versionHistory/${versionKey}`).remove();
+            }
         }
         if (target.classList.contains('delete-btn')) {
             const id = target.dataset.id;
